@@ -1,0 +1,28 @@
+cmake_minimum_required(VERSION 3.22)
+project(dfdroid C)
+set(TP ${CMAKE_CURRENT_SOURCE_DIR}/../../../third_party)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
+# 1) SDL2 (Android backend)
+add_subdirectory(${TP}/SDL2 SDL2)
+
+# 2) sdl12-compat: DF'in SDL 1.2 cagrilarini SDL2'ye cevirir (box64 host libSDL-1.2.so.0 arar)
+set(SDL12TESTS OFF CACHE BOOL "" FORCE)
+set(SDL12TEST OFF CACHE BOOL "" FORCE)
+add_subdirectory(${TP}/sdl12-compat sdl12)
+get_directory_property(_t12 DIRECTORY ${TP}/sdl12-compat BUILDSYSTEM_TARGETS)
+foreach(t ${_t12})
+  get_target_property(ty ${t} TYPE)
+  if(ty STREQUAL "SHARED_LIBRARY")
+    set_target_properties(${t} PROPERTIES OUTPUT_NAME SDL12)
+    target_link_options(${t} PRIVATE -Wl,-soname,libSDL-1.2.so.0)
+    message(STATUS "sdl12-compat target: ${t}")
+  endif()
+endforeach()
+
+# 3) box64 (scripts/patch_box64.py ile SHARED lib + box64_main haline getirilir)
+add_subdirectory(${TP}/box64 box64)
+
+add_library(main SHARED main.c)
+target_include_directories(main PRIVATE ${TP}/SDL2/include)
+target_link_libraries(main SDL2 box64 log android)

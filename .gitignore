@@ -1,0 +1,7 @@
+app/third_party/
+app/src/main/java/org/libsdl/
+app/src/main/jniLibs/
+build_gl4es/
+.gradle/
+build/
+local.properties
